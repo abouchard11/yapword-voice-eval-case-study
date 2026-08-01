@@ -38,12 +38,12 @@ npm run check  # syntax check + tests
 ## Why the bench walks whole games
 
 The property at risk is a through-line. The character ties guess four back to guess one and
-escalates a running joke across the board, so a single-shot prompt A/B would have measured the
-wrong thing and cleared a setting that quietly flattens continuity.
+escalates a running joke across the board. A single-shot prompt A/B can't see that, so it would
+have cleared a setting that flattens continuity.
 
 Each arm replays a complete game turn by turn against the real prompt builder, feeding every
-call the accumulating board state *and* the model's own prior lines, then the closing roast — at
-each setting. Two scenarios stress it in opposite directions: a win-grind where one letter stays
+call the accumulating board state and the model's own prior lines, then the closing roast, at
+each setting. Two scenarios pull in opposite directions: a win-grind where one letter stays
 misplaced until the final guess, and a loss where the player opens with the same wrong letter
 six times.
 
@@ -87,9 +87,8 @@ nothing at any setting — [`docs/leak-safety.md`](docs/leak-safety.md).
   figure above is a sample with a spread. `summarize` reports `runs` so a reader can weigh it.
 - **One product, one property.** This measures voice continuity under cost pressure. It says
   nothing about correctness, or about safety beyond the hint screen.
-- **The aesthetic call is a human's.** The harness automates what's mechanizable — controlled
-  inputs, cost, latency, leak screening — and routes "is it still funny" to a person. That split
-  is the design, not a gap in it, and the same boundary the game itself runs on.
+- **The aesthetic call is a human's.** The harness automates what's mechanizable: controlled
+  inputs, cost, latency, and leak screening. "Is it still funny" goes to a person.
 
 ## Related
 
