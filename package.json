@@ -1,0 +1,16 @@
+{
+  "name": "yapword-voice-eval-case-study",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A sanitized reference model for benchmarking subjective model output against a configuration change, when there is no reference implementation to grade against.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/reference-model.mjs && node --test"
+  },
+  "author": "Alex Bouchard",
+  "license": "MIT"
+}
