@@ -1,67 +1,66 @@
-# Yapword: Benchmarking Subjective Model Output Against a Config Change
+# yapword-voice-eval-case-study
 
-**~82% of inference spend was invisible. Removing it entirely cost nothing measurable.**
+[![CI](https://github.com/abouchard11/yapword-voice-eval-case-study/actions/workflows/ci.yml/badge.svg)](https://github.com/abouchard11/yapword-voice-eval-case-study/actions/workflows/ci.yml)
 
-[Live product](https://yapword.com) ·
-[iPhone app](https://apps.apple.com/us/app/yapword-ai-word-game/id6774829903) ·
-[Engineering workfolio](https://midnightdev.dev/build-room)
+**Benchmarking a generative character when there's nothing to diff against.**
 
-> **Generate boldly. Validate cheaply. Kill ruthlessly. Scale what survives.**
+Yapword is a daily word game with a persistent AI character. A deterministic rules engine owns
+the board, the score, and the outcome. The model owns the voice — reactions to each guess,
+contextual hints, relationship memory, and the postgame roast.
 
-My operating rule is simple: models propose and challenge; explicit authority
-boundaries, human confirmation, and machine-checkable invariants decide what
-ships.
+Roughly 82% of the game's inference bill turned out to be hidden reasoning tokens the player
+never sees. Turning that setting down is a one-line change. Knowing whether it broke anything
+is the hard part: the thing at risk is whether the character is still funny, and there is no
+correct output to compare against.
 
-Yapword is a daily word game with a persistent generative character. A
-deterministic rules engine owns the board, the score, and the outcome. The model
-owns the voice — reactions, hints, relationship memory, and the postgame roast.
+Extracted and generalized from the production harness of a shipped app — so the design
+decisions below aren't hypothetical.
 
-Most of the inference bill was being spent on hidden reasoning tokens the player
-never sees. The obvious fix — turn the thinking down — was untestable, because
-the thing it might break has no reference implementation:
-
-> **There is no correct output to diff against. "Is it funny" has no oracle.**
-
-So the problem is not "lower the setting." It is **build a grader you can trust
-for a property that cannot be checked automatically**, then let it decide.
+- **Zero runtime dependencies** — plain ESM, Node 20+.
+- **Provider-agnostic** — you inject `buildPrompt` and `generate`. Your prompt, your model,
+  your transport.
+- **Unit-tested** — every invariant carries a test, and both injected functions are fakes in the
+  suite, so the failure paths run without a network.
 
 ## Public disclosure
 
-This is a **sanitized engineering case study and executable reference model**,
-not the private production source. It preserves the measurement design that
-matters while withholding the system prompt, the character, credentials,
-provider wiring, private analytics, and the production harness itself.
+This is a sanitized case study and executable reference model, not the production source. The
+system prompt, the character definition, credentials, provider wiring, private analytics, and
+the real harness are excluded.
 
-The prompt is the moat. It does not appear here, and the reference model takes
-`buildPrompt` and `generate` as **injected functions** — which is also why every
-failure path in this repo is reachable in a unit test with no network.
+## Run it
 
-## What the code proves
+```bash
+npm test       # node --test — no network, no credentials
+npm run check  # syntax check + tests
+```
 
-| Invariant | Reference implementation | Test |
+## Why the bench walks whole games
+
+The property at risk is a through-line. The character ties guess four back to guess one and
+escalates a running joke across the board, so a single-shot prompt A/B would have measured the
+wrong thing and cleared a setting that quietly flattens continuity.
+
+Each arm replays a complete game turn by turn against the real prompt builder, feeding every
+call the accumulating board state *and* the model's own prior lines, then the closing roast — at
+each setting. Two scenarios stress it in opposite directions: a win-grind where one letter stays
+misplaced until the final guess, and a loss where the player opens with the same wrong letter
+six times.
+
+## What the code enforces
+
+| Invariant | Implementation | Test |
 |---|---|---|
-| Every arm sees byte-identical inputs | `buildTurnInputs` derives turns once, deterministically, frozen | Same scenario produces identical inputs; inputs are immutable |
-| The comparison is asserted, not assumed | `assertComparable` rejects mismatched scenarios or turn shapes | Short arm, foreign scenario, and duplicate settings all throw |
-| Cross-turn context accumulates truthfully | `runArm` feeds each call the model's own prior outputs, in order | Turn 3 sees turns 1–2; a mutating prompt builder cannot corrupt history |
-| A transport failure is never a bad score | Failed calls become error samples, excluded from the mean | A failed turn leaves `n=2, errors=1` and does not dilute the mean toward zero |
-| A failed turn does not fabricate continuity | Only successful output joins the history | Turn 3 sees turn 1 only — no placeholder for the failed turn 2 |
-| Cost is derived, not estimated | `costOf` sums provider-reported usage and splits hidden from visible | Hidden share exceeds 97% on a high-thinking arm; zero on a minimal one |
-| Statistics carry their own sample size | `summarize` always reports `runs`, `n`, `errors`, `complete` | A single run is labelled a sample, not a measurement |
-| The safety screen documents its own noise | `leakCheck` separates a hard leak from a reviewable flag | The pronoun "I" false positive is asserted, not suppressed |
+| Every arm sees identical inputs | `buildTurnInputs` derives turns once, deterministically, frozen | Same scenario produces identical inputs; inputs are immutable |
+| Comparability is checked, not assumed | `assertComparable` rejects mismatched scenarios and turn shapes | Short arm, foreign scenario, and duplicate settings all throw |
+| Cross-turn context accumulates in order | `runArm` feeds each call the model's own prior outputs | Turn 3 sees turns 1–2; a mutating prompt builder can't corrupt history |
+| A transport failure isn't a bad score | Failed calls become error samples, excluded from the mean | A failed turn leaves `n=2, errors=1` without dragging the mean down |
+| A failed turn doesn't invent continuity | Only successful output joins the history | Turn 3 sees turn 1 only — no placeholder for the failed turn 2 |
+| Cost comes from reported usage | `costOf` sums provider metadata, splitting hidden from visible | Hidden share exceeds 97% on a high arm, zero on a minimal one |
+| Statistics carry their sample size | `summarize` reports `runs`, `n`, `errors`, `complete` | A single run is labelled a sample, not a measurement |
+| The leak screen documents its noise | `leakCheck` separates a hard leak from a reviewable flag | The pronoun "I" false positive is asserted rather than tuned away |
 
-## Why a multi-turn bench, not a prompt A/B
-
-The property under test is a **through-line**: the character ties turn 4 back to
-turn 1 and tells the story the whole board is writing. A single-shot comparison
-would have measured the wrong thing and cleared a setting that quietly destroys
-continuity.
-
-So the bench walks whole games turn by turn, feeding each call the accumulating
-board state **and the model's own prior lines**, then the closing roast — at each
-setting. That is the only arrangement where the thing that might break is
-actually exercised.
-
-## The finding
+## What the sweep found
 
 | Setting | Hidden tokens / game | Visible tokens | Latency | Cost / 1k games |
 |---|--:|--:|--:|--:|
@@ -70,44 +69,39 @@ actually exercised.
 | medium | 7,945 | 186 | 43.0s | $71.50 |
 | high | 8,991 | 195 | 48.8s | $80.92 |
 
-Visible output is ~170–216 tokens for an entire six-turn game. Hidden reasoning
-was **95–98% of billed output tokens** — and buying it changed the imagery, not
-the quality. Full tables, transcripts, and the loss-arc scenario are in
+A whole six-turn game produces 170–216 visible tokens. Hidden reasoning was 95–98% of billed
+output and 5–10× the latency, and buying it changed the imagery rather than the quality. At zero
+thinking the character still built across turns: *"You went from a RANCH to the FAWNS. Your grid
+is beginning to look less like a strategy and more like a poorly managed petting zoo."*
+
+Full tables, both scenarios, and side-by-side transcripts are in
 [`docs/thinking-floor.md`](docs/thinking-floor.md).
 
-The accuracy-sensitive call — the one where the answer is sent to the model and
-only the instruction stops a leak — was benchmarked separately across 36 samples
-and leaked nothing at any setting. See
-[`docs/leak-safety.md`](docs/leak-safety.md).
+One call is accuracy-sensitive rather than aesthetic: the hint, where the answer is sent to the
+model and only the instruction stops a leak. Benchmarked separately across 36 samples, it leaked
+nothing at any setting — [`docs/leak-safety.md`](docs/leak-safety.md).
 
-## What this does not claim
+## Limits
 
-- **The grader is a human ear, deliberately.** The harness automates everything
-  that is mechanizable — cost, latency, leak screening, controlled inputs — and
-  routes the subjective judgment to a person. Pretending otherwise would be the
-  dishonest part.
-- **n is small.** Confirmation ran at 3 samples per cell. Hosted inference is not
-  bit-reproducible at low temperature, so every figure above is a sample with a
-  spread, not a point value. The summary type refuses to hide this.
-- **One product, one property.** This measures voice continuity under cost
-  pressure. It says nothing about correctness, safety beyond the leak screen, or
-  any property it was not pointed at.
-
-## Run it
-
-```bash
-npm test       # node --test, no network, no credentials
-npm run check  # syntax check + tests
-```
+- **n is 3 per cell.** Hosted inference isn't bit-reproducible even at low temperature, so every
+  figure above is a sample with a spread. `summarize` reports `runs` so a reader can weigh it.
+- **One product, one property.** This measures voice continuity under cost pressure. It says
+  nothing about correctness, or about safety beyond the hint screen.
+- **The aesthetic call is a human's.** The harness automates what's mechanizable — controlled
+  inputs, cost, latency, leak screening — and routes "is it still funny" to a person. That split
+  is the design, not a gap in it, and the same boundary the game itself runs on.
 
 ## Related
 
-- [yapoleons-court](https://github.com/abouchard11/yapoleons-court) — the same
-  harness lineage, forked and re-pointed at a different question: rubric fairness
-  under adversarial pressure, with a calibration band and a negative control.
-- [llm-safety-gate](https://github.com/abouchard11/llm-safety-gate) — a
-  fail-closed publish gate extracted from a shipped product, same injectable
-  design.
+- [yapoleons-court](https://github.com/abouchard11/yapoleons-court) — the same harness, forked
+  and pointed at a different question: rubric fairness under adversarial pressure, with a
+  calibration band and a negative control.
+- [llm-safety-gate](https://github.com/abouchard11/llm-safety-gate) — a fail-closed publish gate
+  extracted from a shipped product, built on the same injectable design.
+
+[Live product](https://yapword.com) ·
+[iPhone app](https://apps.apple.com/us/app/yapword-ai-word-game/id6774829903) ·
+[Engineering workfolio](https://midnightdev.dev/build-room)
 
 ## License
 
