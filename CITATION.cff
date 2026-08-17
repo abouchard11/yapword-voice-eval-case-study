@@ -1,0 +1,39 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite the report below."
+title: "yapword-voice-eval-case-study"
+abstract: >-
+  Benchmarking a generative character's voice against a configuration change when there
+  is no reference output to diff against: a multi-turn cost/quality sweep with an
+  injectable, provider-agnostic harness.
+authors:
+  - family-names: "Bouchard"
+    given-names: "Alex"
+    email: "alex@midnightdev.dev"
+    affiliation: "MidnightDev"
+    website: "https://midnightdev.dev"
+repository-code: "https://github.com/abouchard11/yapword-voice-eval-case-study"
+url: "https://github.com/abouchard11/yapword-voice-eval-case-study"
+license: MIT
+version: 1.0.0
+date-released: 2026-07-31
+keywords:
+  - "llm"
+  - "evaluation"
+  - "benchmarking"
+  - "prompt-engineering"
+  - "case-study"
+preferred-citation:
+  type: report
+  title: "Benchmarking a Generative Character's Voice Without a Reference Output: A Multi-Turn Cost and Quality Sweep"
+  authors:
+    - family-names: "Bouchard"
+      given-names: "Alex"
+      email: "alex@midnightdev.dev"
+      affiliation: "MidnightDev"
+      website: "https://midnightdev.dev"
+  institution:
+    name: "MidnightDev"
+  year: 2026
+  month: 7
+  url: "https://github.com/abouchard11/yapword-voice-eval-case-study"
+  license: MIT
