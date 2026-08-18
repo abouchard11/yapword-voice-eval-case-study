@@ -11,6 +11,7 @@ authors:
     email: "alex@midnightdev.dev"
     affiliation: "MidnightDev"
     website: "https://midnightdev.dev"
+    orcid: "https://orcid.org/0009-0003-0911-9681"
 repository-code: "https://github.com/abouchard11/yapword-voice-eval-case-study"
 url: "https://github.com/abouchard11/yapword-voice-eval-case-study"
 license: MIT
@@ -31,6 +32,7 @@ preferred-citation:
       email: "alex@midnightdev.dev"
       affiliation: "MidnightDev"
       website: "https://midnightdev.dev"
+      orcid: "https://orcid.org/0009-0003-0911-9681"
   institution:
     name: "MidnightDev"
   year: 2026
