@@ -12,5 +12,5 @@
     "check": "node --check src/reference-model.mjs && node --test"
   },
   "author": "Alex Bouchard",
-  "license": "MIT"
+  "license": "UNLICENSED"
 }

@@ -102,6 +102,6 @@ nothing at any setting — [`docs/leak-safety.md`](docs/leak-safety.md).
 [iPhone app](https://apps.apple.com/us/app/yapword-ai-word-game/id6774829903) ·
 [Engineering workfolio](https://midnightdev.dev/build-room)
 
-## License
+## Rights
 
-[MIT](LICENSE) © 2026 Alex Bouchard (MidnightDev)
+**Proprietary — all rights reserved. No license is granted.** See [LICENSE](LICENSE).
