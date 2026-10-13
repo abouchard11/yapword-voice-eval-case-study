@@ -14,7 +14,6 @@ authors:
     orcid: "https://orcid.org/0009-0003-0911-9681"
 repository-code: "https://github.com/abouchard11/yapword-voice-eval-case-study"
 url: "https://github.com/abouchard11/yapword-voice-eval-case-study"
-license: MIT
 version: 1.0.0
 date-released: 2026-07-31
 keywords:
@@ -38,4 +37,3 @@ preferred-citation:
   year: 2026
   month: 7
   url: "https://github.com/abouchard11/yapword-voice-eval-case-study"
-  license: MIT
