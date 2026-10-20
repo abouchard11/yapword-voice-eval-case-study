@@ -1,6 +1,7 @@
 # yapword-voice-eval-case-study
 
 [![CI](https://github.com/abouchard11/yapword-voice-eval-case-study/actions/workflows/ci.yml/badge.svg)](https://github.com/abouchard11/yapword-voice-eval-case-study/actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23503120.svg)](https://doi.org/10.5281/zenodo.23503120)
 
 **Benchmarking a generative character when there's nothing to diff against.**
 
